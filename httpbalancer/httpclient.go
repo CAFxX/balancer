@@ -10,9 +10,7 @@ import (
 )
 
 func Wrap(client *http.Client, balancer balancer.Balancer) *http.Client {
-	rt := NewBalancedRoundTripper(balancer, client.Transport)
-	client.Transport = rt
-
+	client.Transport = NewBalancedRoundTripper(balancer, client.Transport)
 	return client
 }
 
