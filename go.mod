@@ -1,8 +1,5 @@
-module github.com/esiqveland/balancer
+module github.com/CAFxX/balancer
 
 go 1.16
 
-require (
-	github.com/CAFxX/fastrand v0.1.0
-	github.com/pkg/errors v0.9.1
-)
+require github.com/CAFxX/fastrand v0.1.0

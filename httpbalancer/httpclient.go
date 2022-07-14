@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/esiqveland/balancer"
+	"github.com/CAFxX/balancer"
 )
 
 func Wrap(balancer balancer.Balancer, delegate http.RoundTripper) http.RoundTripper {

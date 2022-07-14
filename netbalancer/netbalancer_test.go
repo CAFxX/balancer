@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/esiqveland/balancer"
+	"github.com/CAFxX/balancer"
 )
 
 func Test_equalsHost(t *testing.T) {
@@ -24,30 +24,30 @@ func Test_equalsHost(t *testing.T) {
 		},
 		want: true,
 	},
-	{
-		name: "two not equal hosts by port",
-		args: args{
-			a: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1233},
-			b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
+		{
+			name: "two not equal hosts by port",
+			args: args{
+				a: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1233},
+				b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
+			},
+			want: false,
 		},
-		want: false,
-	},
-	{
-		name: "two not equal hosts by IP",
-		args: args{
-			a: balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
-			b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
+		{
+			name: "two not equal hosts by IP",
+			args: args{
+				a: balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
+				b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
+			},
+			want: false,
 		},
-		want: false,
-	},
-	{
-		name: "two not equal hosts by IP and Port",
-		args: args{
-			a: balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
-			b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
+		{
+			name: "two not equal hosts by IP and Port",
+			args: args{
+				a: balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
+				b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
+			},
+			want: false,
 		},
-		want: false,
-	},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -74,7 +74,7 @@ func Test_equals(t *testing.T) {
 			b: []balancer.Host{},
 		},
 		want: true,
-	},{
+	}, {
 		name: "two same ips",
 		args: args{
 			a: []balancer.Host{
@@ -85,7 +85,7 @@ func Test_equals(t *testing.T) {
 			},
 		},
 		want: true,
-	},{
+	}, {
 		name: "different list length",
 		args: args{
 			a: []balancer.Host{
@@ -97,7 +97,7 @@ func Test_equals(t *testing.T) {
 			},
 		},
 		want: false,
-	},{
+	}, {
 		name: "two equals lists of hosts",
 		args: args{
 			a: []balancer.Host{
@@ -112,7 +112,7 @@ func Test_equals(t *testing.T) {
 			},
 		},
 		want: true,
-	},{
+	}, {
 		name: "two equals scrambled lists of hosts",
 		args: args{
 			a: []balancer.Host{
@@ -127,7 +127,7 @@ func Test_equals(t *testing.T) {
 			},
 		},
 		want: true,
-	},{
+	}, {
 		name: "two equals scrambled lists of host ports",
 		args: args{
 			a: []balancer.Host{

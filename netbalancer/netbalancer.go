@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/CAFxX/balancer"
 	"github.com/CAFxX/fastrand"
-	"github.com/esiqveland/balancer"
 )
 
 // NewNetBalancer returns a Balancer that uses dns lookups from net.Lookup* to reload a set of hosts every updateInterval.
