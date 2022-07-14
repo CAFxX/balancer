@@ -9,12 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func Wrap(client *http.Client, balancer balancer.Balancer) *http.Client {
-	client.Transport = NewBalancedRoundTripper(balancer, client.Transport)
-	return client
-}
-
-func NewBalancedRoundTripper(balancer balancer.Balancer, delegate http.RoundTripper) http.RoundTripper {
+func Wrap(balancer balancer.Balancer, delegate http.RoundTripper) http.RoundTripper {
 	return &balancedRoundTripper{
 		Delegate: delegate,
 		Balancer: balancer,
