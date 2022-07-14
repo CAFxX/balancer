@@ -30,21 +30,14 @@ type balancedRoundTripper struct {
 
 func (rt *balancedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	ctx := req.Context()
-	log := zerolog.Ctx(ctx)
 
 	host, err := rt.Balancer.Next()
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info().Msgf("selected host=%v", host.Address.String())
-	//var reqCopy http.Request = *req
-
-	selectedHost := net.JoinHostPort(host.Address.String(), strconv.Itoa(host.Port))
-
-	// strictly speaking, a RoundTripper is not allowed to mutate the request,
-	// except for reading and Closing the req.Body so this might have consequences I am not aware of.
-	req.URL.Host = selectedHost
+	req = req.Clone(req.Context())
+	req.URL.Host = net.JoinHostPort(host.Address.String(), strconv.Itoa(host.Port))
 
 	return rt.Delegate.RoundTrip(req)
 }
