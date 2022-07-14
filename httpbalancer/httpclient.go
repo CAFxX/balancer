@@ -21,8 +21,6 @@ type balancedRoundTripper struct {
 }
 
 func (rt *balancedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	ctx := req.Context()
-
 	host, err := rt.Balancer.Next()
 	if err != nil {
 		return nil, err

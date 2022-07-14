@@ -9,8 +9,8 @@ import (
 
 func Test_equalsHost(t *testing.T) {
 	type args struct {
-		a *balancer.Host
-		b *balancer.Host
+		a balancer.Host
+		b balancer.Host
 	}
 	tests := []struct {
 		name string
@@ -19,32 +19,32 @@ func Test_equalsHost(t *testing.T) {
 	}{{
 		name: "two equal hosts",
 		args: args{
-			a: &balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
-			b: &balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
+			a: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
+			b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
 		},
 		want: true,
 	},
 	{
 		name: "two not equal hosts by port",
 		args: args{
-			a: &balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1233},
-			b: &balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
+			a: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1233},
+			b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 		},
 		want: false,
 	},
 	{
 		name: "two not equal hosts by IP",
 		args: args{
-			a: &balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
-			b: &balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
+			a: balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
+			b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 		},
 		want: false,
 	},
 	{
 		name: "two not equal hosts by IP and Port",
 		args: args{
-			a: &balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
-			b: &balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
+			a: balancer.Host{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
+			b: balancer.Host{Address: net.IPv4(192, 168, 0, 1), Port: 123},
 		},
 		want: false,
 	},
@@ -60,8 +60,8 @@ func Test_equalsHost(t *testing.T) {
 
 func Test_equals(t *testing.T) {
 	type args struct {
-		a []*balancer.Host
-		b []*balancer.Host
+		a []balancer.Host
+		b []balancer.Host
 	}
 	tests := []struct {
 		name string
@@ -70,17 +70,17 @@ func Test_equals(t *testing.T) {
 	}{{
 		name: "empty list",
 		args: args{
-			a: []*balancer.Host{},
-			b: []*balancer.Host{},
+			a: []balancer.Host{},
+			b: []balancer.Host{},
 		},
 		want: true,
 	},{
 		name: "two same ips",
 		args: args{
-			a: []*balancer.Host{
+			a: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 			},
-			b: []*balancer.Host{
+			b: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 			},
 		},
@@ -88,11 +88,11 @@ func Test_equals(t *testing.T) {
 	},{
 		name: "different list length",
 		args: args{
-			a: []*balancer.Host{
+			a: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 			},
-			b: []*balancer.Host{
+			b: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 			},
 		},
@@ -100,12 +100,12 @@ func Test_equals(t *testing.T) {
 	},{
 		name: "two equals lists of hosts",
 		args: args{
-			a: []*balancer.Host{
+			a: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 3), Port: 1234},
 			},
-			b: []*balancer.Host{
+			b: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 3), Port: 1234},
@@ -115,12 +115,12 @@ func Test_equals(t *testing.T) {
 	},{
 		name: "two equals scrambled lists of hosts",
 		args: args{
-			a: []*balancer.Host{
+			a: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 3), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 			},
-			b: []*balancer.Host{
+			b: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 2), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 3), Port: 1234},
@@ -130,12 +130,12 @@ func Test_equals(t *testing.T) {
 	},{
 		name: "two equals scrambled lists of host ports",
 		args: args{
-			a: []*balancer.Host{
+			a: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 1), Port: 123},
 				{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
 				{Address: net.IPv4(192, 168, 0, 1), Port: 12345},
 			},
-			b: []*balancer.Host{
+			b: []balancer.Host{
 				{Address: net.IPv4(192, 168, 0, 1), Port: 12345},
 				{Address: net.IPv4(192, 168, 0, 1), Port: 123},
 				{Address: net.IPv4(192, 168, 0, 1), Port: 1234},
