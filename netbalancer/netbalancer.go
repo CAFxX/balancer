@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/bits"
 	"math/rand"
 	"net"
 	"sync/atomic"
@@ -16,22 +17,22 @@ import (
 
 // NewNetBalancer returns a Balancer that uses dns lookups from net.Lookup* to reload a set of hosts every updateInterval.
 // We can not use TTL from dns because TTL is not exposed by the Go calls.
-func New(host string, port int, updateInterval, timeout time.Duration, resolver resolver) (balancer.Balancer, error) {
+func New(host string, port int, updateInterval, resolverTimeout time.Duration, resolver resolver) (balancer.Balancer, error) {
 	if resolver == nil {
 		resolver = net.DefaultResolver
 	}
 
 	b := &dnsBalancer{
-		lookupAddress: host,
-		port:          port,
-		interval:      updateInterval,
-		quit:          make(chan struct{}, 1),
-		Timeout:       timeout,
-		resolver:      resolver,
+		lookupAddress:   host,
+		port:            port,
+		interval:        updateInterval,
+		quit:            make(chan struct{}, 1),
+		resolverTimeout: resolverTimeout,
+		resolver:        resolver,
 	}
 	b.rnd.Seed(rand.Uint64())
 
-	initialHosts, err := b.lookupTimeout(timeout, host, port)
+	initialHosts, err := b.lookupTimeout(host, port)
 	if err != nil {
 		return nil, err
 	}
@@ -52,15 +53,15 @@ type resolver interface {
 }
 
 type dnsBalancer struct {
-	resolver      resolver
-	lookupAddress string
-	port          int
-	interval      time.Duration
-	quit          chan struct{}
-	log           log.Logger
-	Timeout       time.Duration
-	rnd           fastrand.AtomicSplitMix64
-	hosts         atomic.Value // []balancer.Host
+	resolver        resolver
+	lookupAddress   string
+	port            int
+	interval        time.Duration
+	quit            chan struct{}
+	log             log.Logger
+	resolverTimeout time.Duration
+	rnd             fastrand.AtomicSplitMix64
+	hosts           atomic.Value // []balancer.Host
 }
 
 func (b *dnsBalancer) Next() (balancer.Host, error) {
@@ -71,7 +72,7 @@ func (b *dnsBalancer) Next() (balancer.Host, error) {
 		return balancer.Host{}, balancer.ErrNoHosts
 	}
 
-	idx := b.rnd.Uint64() % count
+	idx := fastmod(b.rnd.Uint64(), count)
 	return hosts[idx], nil
 }
 
@@ -90,7 +91,7 @@ func (b *dnsBalancer) loop() {
 }
 
 func (b *dnsBalancer) update() {
-	nextHostList, err := b.lookupTimeout(b.Timeout, b.lookupAddress, b.port)
+	nextHostList, err := b.lookupTimeout(b.lookupAddress, b.port)
 	if err != nil {
 		//  TODO: set hostList to empty?
 		b.log.Printf("[DnsBalancers] error looking up dns='%v': %v", b.lookupAddress, err)
@@ -138,8 +139,8 @@ func hostListContains(hosts []balancer.Host, host balancer.Host) bool {
 	return false
 }
 
-func (b *dnsBalancer) lookupTimeout(timeout time.Duration, host string, port int) ([]balancer.Host, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+func (b *dnsBalancer) lookupTimeout(host string, port int) ([]balancer.Host, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), b.resolverTimeout)
 	defer cancel()
 
 	return b.lookup(ctx, host, port)
@@ -168,4 +169,9 @@ func (b *dnsBalancer) Close() error {
 	b.quit <- struct{}{}
 
 	return nil
+}
+
+func fastmod(rnd uint64, mod uint64) uint64 {
+	hi, _ := bits.Mul64(rnd, mod)
+	return hi
 }
