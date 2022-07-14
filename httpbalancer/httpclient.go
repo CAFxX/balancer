@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/esiqveland/balancer"
-	"github.com/rs/zerolog"
 )
 
 func Wrap(balancer balancer.Balancer, delegate http.RoundTripper) http.RoundTripper {
