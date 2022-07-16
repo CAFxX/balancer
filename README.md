@@ -13,6 +13,4 @@ This is left up to decide for a consul DNS or kubernetes DNS, and assumes hosts 
 
 `balancer` does not retry or otherwise try to fix problems, leaving this up to the caller.
 
-`balancer` currently assumes that a lookup will return a non-empty set of initial hosts on startup.
-
 As the  `net` and `net/http` packages do not expose the required functionality, `balancer` disables the dual stack (IPv4/IPv6) support that is normally automatically provided by those packages. Care must be taken to specify the correct stack to use. See `Wrap` for details.
