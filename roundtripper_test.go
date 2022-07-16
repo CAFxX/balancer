@@ -6,7 +6,11 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"runtime"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 type roundTripperFunc func(req *http.Request) (*http.Response, error)
@@ -102,5 +106,72 @@ func TestRoundTripperWeirdRequest(t *testing.T) {
 	})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestRoundtripperAndResolvers(t *testing.T) {
+	addr1, _ := netip.ParseAddr("100.0.0.1")
+
+	var resolveCount uint64
+	var rtCount uint64
+
+	rt := Wrap(roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.URL.Hostname() != "100.0.0.1" {
+			t.Errorf("wrong URL hostname: %q", req.URL.Hostname())
+		}
+		if req.Host != "example.com" {
+			t.Errorf("wrong hostname: %q", req.Host)
+		}
+		atomic.AddUint64(&rtCount, 1)
+		return nil, nil
+	}), &CachingResolver{
+		Resolver: &SingleflightResolver{
+			Resolver: &TimeoutResolver{
+				Resolver: resolverFunc(func(ctx context.Context, af, host string) ([]netip.Addr, error) {
+					if af != "ip4" {
+						t.Errorf("wrong af: %q", af)
+					}
+					if host != "example.com" {
+						t.Errorf("wrong host: %q", host)
+					}
+					atomic.AddUint64(&resolveCount, 1)
+
+					time.Sleep(100 * time.Millisecond) // simulate latency
+					return []netip.Addr{addr1}, nil
+				}),
+				Timeout: 2 * time.Second,
+			},
+		},
+		TTL:    1 * time.Second,
+		NegTTL: 250 * time.Millisecond,
+	}, "ip4")
+
+	start := time.Now()
+
+	var count uint64
+	var wg sync.WaitGroup
+	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+			for {
+				c := atomic.LoadUint64(&count)
+				if c > 1000000 {
+					break
+				}
+				if atomic.CompareAndSwapUint64(&count, c, c+1) {
+					rt.RoundTrip(req)
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	if resolveCount > uint64(time.Since(start).Seconds())+1 {
+		t.Errorf("resolveCount: %d", resolveCount)
+	}
+	if rtCount != count {
+		t.Errorf("rtCount != count: %d != %d", rtCount, count)
 	}
 }

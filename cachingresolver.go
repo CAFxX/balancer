@@ -64,6 +64,10 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 
 	c.mu.Lock()
 
+	if c.m == nil {
+		c.m = map[key]result{}
+	}
+
 	if r, ok := c.m[key{af, host}]; !ok || r.exp.Before(exp) {
 		c.m[key{af, host}] = result{ips, err, exp}
 	}
