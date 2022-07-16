@@ -2,7 +2,7 @@
 
 A simple client side HTTP load balancer for go applications.
 
-`balancer` was made to provide easier access to DNS-based load balancing for go services running in kubernetes and was mainly built for `http.Client`.
+[`http.Client` does not balance requests across multiple backend servers](https://github.com/golang/go/issues/34511) (a.k.a. DNS round-robin) unless persistent connections are disabled. `balancer` was created to provide DNS-based load balancing for go services.
 
 This library originated as a fork of [`github.com/esiqveland/balancer`](https://github.com/esiqveland/balancer) but has since been fully rewritten and it contains no upstream code.
 
