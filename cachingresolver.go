@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/netip"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -22,6 +23,8 @@ type CachingResolver struct {
 
 	mu sync.RWMutex
 	m  map[key]result
+
+	count uint64
 }
 
 type key struct {
@@ -44,6 +47,7 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 		c.mu.RUnlock()
 
 		if ok && r.exp.After(time.Now()) {
+			c.sampledCleanupAsync(asyncSamples)
 			return r.ips, r.err
 		}
 	}
@@ -53,6 +57,7 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 	if (err != nil && ctx.Err() != nil) || (err != nil && c.NegTTL == 0) || (err == nil && c.TTL == 0) {
 		// If the context was cancelled we don't cache the result.
 		// Similarly if the TTL is 0.
+		c.sampledCleanupAsync(asyncSamples)
 		return ips, err
 	}
 
@@ -76,7 +81,30 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 	// a small number of random entries to see if they are expired. If so
 	// we remove them from the map. This is meant to prevent the map from
 	// growing unbounded.
-	samples := 3
+	c.sampledCleanupLocked(lockedSamples)
+
+	c.mu.Unlock()
+
+	return ips, err
+}
+
+const (
+	asyncInterval = 1024
+	asyncSamples  = 10
+	lockedSamples = 3
+)
+
+func (c *CachingResolver) sampledCleanupAsync(samples int) {
+	if atomic.AddUint64(&c.count, 1)%asyncInterval == 0 {
+		go func() {
+			c.mu.Lock()
+			defer c.mu.Unlock()
+			c.sampledCleanupLocked(samples)
+		}()
+	}
+}
+
+func (c *CachingResolver) sampledCleanupLocked(samples int) {
 	now := time.Now()
 	for k, r := range c.m {
 		if r.exp.Before(now) {
@@ -87,8 +115,4 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 			break
 		}
 	}
-
-	c.mu.Unlock()
-
-	return ips, err
 }
