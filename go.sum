@@ -2,3 +2,5 @@ github.com/CAFxX/fastrand v0.1.0 h1:rPq1fmJDjiTTZO/5dJkXnQ2o0XPtu62eE5mPJLO9TZU=
 github.com/CAFxX/fastrand v0.1.0/go.mod h1:RnnC1FVtVbW6vBUfxe7Slpf/yyGo9TnAiMKerW0CgEk=
 github.com/valyala/fastrand v1.0.0 h1:LUKT9aKer2dVQNUi3waewTbKV+7H17kvWFNKs2ObdkI=
 github.com/valyala/fastrand v1.0.0/go.mod h1:HWqCzkrkg6QXT8V2EXWvXCoow7vLwOFN002oeRzjapQ=
+resenje.org/singleflight v0.3.0 h1:USJtsAN6HTUA827ksc+2Kcr7QZ4HBq/z/P8ugVbqKFY=
+resenje.org/singleflight v0.3.0/go.mod h1:lAgQK7VfjG6/pgredbQfmV0RvG/uVhKo6vSuZ0vCWfk=

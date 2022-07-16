@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// CachingResolver caches responses from the wrapped DNS resolver for the specified
+// amount of time.
+//
+// CachingResolver does not implement a timeout for DNS queries: for that you can
+// wrap a TimeoutResolver inside the CachingResolver.
 type CachingResolver struct {
 	Resolver Resolver      // Wrapped DNS resolver.
 	TTL      time.Duration // How long to cache positive results for.
