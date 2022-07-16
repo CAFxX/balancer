@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/bits"
-	"math/rand"
 	"net"
 	"net/http"
 	"net/netip"
@@ -25,12 +24,20 @@ type Resolver interface {
 // for each request (you can use the CachingResolver to add caching to any Resolver).
 // net.Resolver and net.DefaultResolver implement the Resolver interface.
 //
-// The af parameter must be one of "ip", "ip4", or "ip6", and is passed as-is to
-// Resolver.LookupNetIP. If your service does not support IPv6 you should set this to
-// "ip4". See net.Resolver for details.
+// The af parameter must be one of "ip4", "ip6", or "ip", and is passed as-is to
+// Resolver.LookupNetIP to specify which IP family addresses to use (IPv4, IPv6, or
+// both). If your service does not support IPv6 you should set this to "ip4"
+// (see net.Resolver for details). Normally the net package automatically attempts
+// to use both (see net.Dialer for details), but Wrap modified the request by
+// replacing the hostname of the server with one of its IPs (chosen at random, if
+// the hostname resolves to multiple IPs), so by the time the request reaches the
+// net.Dialer it targets a specific server IP, instead of the server hostname. As
+// a result net.Dialer is unable to automatically pick the appropriate IP family.
+// For this reason it is extremely important to specify the correct af (address
+// family) value.
 func Wrap(rt http.RoundTripper, resolver Resolver, af string) http.RoundTripper {
 	b := &balancedRoundTripper{rt: rt, resolver: resolver, af: af}
-	b.rnd.Seed(rand.Uint64())
+	b.rnd.Seed(fastrand.Seed())
 	return b
 }
 
@@ -42,10 +49,10 @@ type balancedRoundTripper struct {
 }
 
 func (rt *balancedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	host := req.URL.Hostname()
-	ips, err := rt.resolver.LookupNetIP(req.Context(), rt.af, host)
+	host, hostname := req.URL.Host, req.URL.Hostname()
+	ips, err := rt.resolver.LookupNetIP(req.Context(), rt.af, hostname)
 	if err != nil || len(ips) == 0 {
-		return nil, fmt.Errorf("resolving hostname %q: %w", host, err)
+		return nil, fmt.Errorf("resolving hostname %q: %w", hostname, err)
 	}
 
 	ip := ips[0]
@@ -54,7 +61,9 @@ func (rt *balancedRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 		ip = ips[rt.randIndex(len(ips))]
 	}
 
-	req = req.Clone(req.Context()) // RoundTrippers are not allowed to modify the original request.
+	// RoundTrippers are not allowed to modify the original request, so we clone the
+	// request, modify the clone, and pass the clone to the wrapped RoundTripper.
+	req = req.Clone(req.Context())
 	if port := req.URL.Port(); port == "" {
 		req.URL.Host = ip.String()
 	} else {
