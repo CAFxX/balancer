@@ -11,11 +11,14 @@ import (
 // amount of time.
 //
 // CachingResolver does not implement a timeout for DNS queries: for that you can
-// wrap a TimeoutResolver inside the CachingResolver.
+// use a TimeoutResolver. Similarly, it does not implement concurrent request
+// deduplication: for that you can use a SingleflightResolver.
+// See ExampleAdvanced for the recommended way of composing these additional
+// resolvers.
 type CachingResolver struct {
 	Resolver Resolver      // Wrapped DNS resolver.
-	TTL      time.Duration // How long to cache positive results for.
-	NegTTL   time.Duration // How long to cache negative results for.
+	TTL      time.Duration // How long to cache positive results for. 0 disables caching for positive results.
+	NegTTL   time.Duration // How long to cache negative results for. 0 disables caching for negative results.
 
 	mu sync.RWMutex
 	m  map[key]result
@@ -44,9 +47,6 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 			return r.ips, r.err
 		}
 	}
-
-	// TODO: Limit the number of concurrent queries to the same hostname (a.k.a.
-	// singleflight) to prevent thundering herd issues on the DNS server.
 
 	exp := time.Now()
 	ips, err := c.Resolver.LookupNetIP(ctx, af, host)
