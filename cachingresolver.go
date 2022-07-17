@@ -41,9 +41,12 @@ type result struct {
 var _ Resolver = &CachingResolver{}
 
 func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]netip.Addr, error) {
+	var mSize int
+
 	if c.TTL > 0 || c.NegTTL > 0 {
 		c.mu.RLock()
 		r, ok := c.m[key{af, host}]
+		mSize = len(c.m)
 		c.mu.RUnlock()
 
 		if ok && r.exp.After(time.Now()) {
@@ -57,7 +60,9 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 	if (err != nil && ctx.Err() != nil) || (err != nil && c.NegTTL == 0) || (err == nil && c.TTL == 0) {
 		// If the context was cancelled we don't cache the result.
 		// Similarly if the TTL is 0.
-		c.sampledCleanupAsync(asyncSamples)
+		if mSize > 0 {
+			c.sampledCleanupAsync(asyncSamples)
+		}
 		// No need to clone here, as this slice is not from the cache.
 		return ips, err
 	}
@@ -112,7 +117,7 @@ func (c *CachingResolver) sampledCleanupLocked(samples int) {
 			delete(c.m, k)
 		}
 		samples--
-		if samples == 0 {
+		if samples <= 0 {
 			break
 		}
 	}
