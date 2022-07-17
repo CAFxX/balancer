@@ -48,7 +48,7 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 
 		if ok && r.exp.After(time.Now()) {
 			c.sampledCleanupAsync(asyncSamples)
-			return r.ips, r.err
+			return clone(r.ips), r.err
 		}
 	}
 
@@ -58,6 +58,7 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 		// If the context was cancelled we don't cache the result.
 		// Similarly if the TTL is 0.
 		c.sampledCleanupAsync(asyncSamples)
+		// No need to clone here, as this slice is not from the cache.
 		return ips, err
 	}
 
@@ -85,7 +86,7 @@ func (c *CachingResolver) LookupNetIP(ctx context.Context, af, host string) ([]n
 
 	c.mu.Unlock()
 
-	return ips, err
+	return clone(ips), err
 }
 
 const (
@@ -115,4 +116,8 @@ func (c *CachingResolver) sampledCleanupLocked(samples int) {
 			break
 		}
 	}
+}
+
+func clone(s []netip.Addr) []netip.Addr {
+	return append([]netip.Addr(nil), s...)
 }
