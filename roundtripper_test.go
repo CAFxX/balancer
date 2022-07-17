@@ -24,6 +24,8 @@ func (f resolverFunc) LookupNetIP(ctx context.Context, af, host string) ([]netip
 }
 
 func TestRoundTripperBalance(t *testing.T) {
+	t.Parallel()
+
 	addr1, _ := netip.ParseAddr("100.0.0.1")
 	addr2, _ := netip.ParseAddr("100.0.0.2")
 	m := map[string]int{}
@@ -61,6 +63,8 @@ func TestRoundTripperBalance(t *testing.T) {
 }
 
 func TestRoundTripperError(t *testing.T) {
+	t.Parallel()
+
 	rt := Wrap(roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		t.Fatal("unreacheable")
 		return nil, nil
@@ -76,6 +80,8 @@ func TestRoundTripperError(t *testing.T) {
 }
 
 func TestRoundTripperWeirdRequest(t *testing.T) {
+	t.Parallel()
+
 	addr1, _ := netip.ParseAddr("100.0.0.1")
 
 	rt := Wrap(roundTripperFunc(func(req *http.Request) (*http.Response, error) {
@@ -110,6 +116,8 @@ func TestRoundTripperWeirdRequest(t *testing.T) {
 }
 
 func TestRoundtripperAndResolvers(t *testing.T) {
+	t.Parallel()
+
 	addr1, _ := netip.ParseAddr("100.0.0.1")
 
 	var resolveCount uint64
