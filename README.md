@@ -1,6 +1,11 @@
 # balancer
 
-A simple client side HTTP load balancer for go applications.
+[![Build status](https://github.com/CAFxX/balancer/workflows/Test/badge.svg)](https://github.com/CAFxX/balancer/actions)
+[![codecov](https://codecov.io/gh/CAFxX/balancer/branch/main/graph/badge.svg)](https://codecov.io/gh/CAFxX/balancer)
+[![Go Report](https://goreportcard.com/badge/github.com/CAFxX/balancer)](https://goreportcard.com/report/github.com/CAFxX/balancer) 
+[![Go Reference](https://pkg.go.dev/badge/github.com/CAFxX/balancer.svg)](https://pkg.go.dev/github.com/CAFxX/balancer) :warning: API is not stable yet.
+
+A simple client-side HTTP load balancer for go applications.
 
 [`http.Client` does not balance requests across multiple backend servers](https://github.com/golang/go/issues/34511) (a.k.a. DNS round-robin) unless persistent connections are disabled. `balancer` was created to provide DNS-based load balancing for go services.
 
@@ -9,7 +14,7 @@ This library originated as a fork of [`github.com/esiqveland/balancer`](https://
 ## Scope
 
 `balancer` does not do health checking and does not monitor status of any hosts.
-This is left up to decide for a consul DNS or kubernetes DNS, and assumes hosts returned are deemed healthy.
+This is left up to external mechanisms, and assumes hosts returned by the DNS resolver are healthy.
 
 `balancer` does not retry or otherwise try to fix problems, leaving this up to the caller.
 
