@@ -11,6 +11,8 @@ A simple client-side HTTP load balancer for go applications.
 
 This library originated as a fork of [`github.com/esiqveland/balancer`](https://github.com/esiqveland/balancer) but has since been fully rewritten and it contains no upstream code.
 
+This library also contains a number of `net.Resolver` middlewares that add useful features such as caching, timeout, and  request deduplication (for thundering herd protection).
+
 ## Scope
 
 `balancer` does not do health checking and does not monitor status of any hosts.
