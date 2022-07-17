@@ -9,6 +9,13 @@ import (
 
 // SingleflightResolver allows to deduplicate concurrent requests for the
 // DNS records of the same hostname.
+//
+// If multiple concurrent requests to resolve the same hostname are performed,
+// SingleflightResolver will allow the first to proceed. Additional requests
+// are paused until the parent resolver has responded, at which point the
+// response is provided to all pending requests for that hostname.
+// Note that the request to the parent resolver is cancelled only once all
+// pending requests for that hostname have been cancelled.
 type SingleflightResolver struct {
 	Resolver Resolver // Wrapped DNS resolver.
 
