@@ -124,7 +124,5 @@ func (c *CachingResolver) sampledCleanupLocked(samples int) {
 }
 
 func clone(s []netip.Addr) []netip.Addr {
-	c := make([]netip.Addr, len(s))
-	copy(c, s)
-	return c
+	return append([]netip.Addr(nil), s...)
 }
